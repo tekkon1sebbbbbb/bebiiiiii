@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Love Letter Delivery</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background: linear-gradient(to bottom right, #ffe6f0, #ffe8ff);
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+      flex-direction: column;
+    }
+
+    .cat {
+      font-size: 5rem;
+      cursor: pointer;
+      position: absolute;
+      left: -100px;
+      top: 50%;
+      transform: translateY(-50%);
+      animation: walk 4s forwards;
+    }
+
+    .click-note {
+      position: absolute;
+      top: 65%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      background: transparent;
+      padding: 8px 15px;
+      animation: bounce 1s infinite;
+      display: none;
+    }
+
+    @keyframes walk {
+      0% { left: -100px; }
+      100% { left: 50%; transform: translate(-50%, -50%); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translate(-50%, 0); }
+      50% { transform: translate(-50%, -10px); }
+    }
+
+    .cat-dialogue {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      display: none;
+    }
+
+    .cat-face {
+      font-size: 5rem;
+    }
+
+    .dialogue-box {
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      max-width: 320px;
+      margin-top: 10px;
+    }
+
+    .questionnaire button {
+      margin: 8px 5px 0;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background-color: #ffc0cb;
+      cursor: pointer;
+    }
+
+    .envelope-container {
+      position: relative;
+      width: 300px;
+      height: 200px;
+      margin-top: 20px;
+      display: none;
+      animation: zoomin 1s forwards;
+    }
+
+    @keyframes zoomin {
+      from { transform: scale(0.2); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .envelope {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #ffc0cb;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      transition: transform 1s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .flap {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #ff9aa2;
+      clip-path: polygon(0 0, 100% 0, 50% 60%);
+      transform-origin: top;
+      transition: transform 1s ease;
+    }
+
+    .letter {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: white;
+      padding: 20px;
+      box-sizing: border-box;
+      transform: translateY(100%);
+      opacity: 0;
+      transition: transform 1s ease, opacity 1s ease;
+      border-radius: 8px;
+      box-shadow: inset 0 0 10px #ffb6c1;
+    }
+
+    .envelope.open .flap {
+      transform: rotateX(-120deg);
+    }
+
+    .envelope.open .letter {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .heart {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: red;
+      transform: rotate(45deg);
+      animation: float 4s linear forwards;
+      z-index: 999;
+    }
+
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: red;
+      border-radius: 50%;
+    }
+
+    .heart::before {
+      top: -15px;
+      left: 0;
+    }
+
+    .heart::after {
+      left: -15px;
+      top: 0;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0); opacity: 1; }
+      100% { transform: translateY(-200px) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <audio id="soundClick" src="https://www.myinstants.com/media/sounds/click.mp3"></audio>
+  <audio id="soundMeow" src="https://www.myinstants.com/media/sounds/cat-meow.mp3"></audio>
+  <audio id="soundLetter" src="https://www.myinstants.com/media/sounds/magic.mp3"></audio>
+  <audio id="soundHearts" src="https://www.myinstants.com/media/sounds/sparkle.mp3"></audio>
+  <audio id="soundBackground" src="https://dl.sndup.net/8xk9/cute_background_loop.mp3" loop autoplay></audio>
+  <audio id="soundSteps" src="https://dl.sndup.net/bqtg/cat_steps.mp3"></audio>
+
+  <div class="cat" id="cat">🐈</div>
+  <div class="click-note" id="clickNote">Click the cat to continue</div>
+
+  <div class="cat-dialogue" id="catDialogue">
+    <div class="cat-face" id="catFace">😺</div>
+    <div class="dialogue-box">
+      <p id="catText"></p>
+      <div class="questionnaire" id="questions"></div>
+    </div>
+  </div>
+
+  <div class="envelope-container" id="envelopeContainer">
+    <div class="envelope" onclick="openEnvelope(this)">
+      <div class="flap"></div>
+      <div class="letter">
+        <h2>💌</h2>
+        <p>(Letter appears here)</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cat = document.getElementById('cat');
+    const clickNote = document.getElementById('clickNote');
+    const catDialogue = document.getElementById('catDialogue');
+    const questions = document.getElementById('questions');
+    const catFace = document.getElementById('catFace');
+    const catText = document.getElementById('catText');
+    const envelopeContainer = document.getElementById('envelopeContainer');
+
+    const soundClick = document.getElementById('soundClick');
+    const soundMeow = document.getElementById('soundMeow');
+    const soundLetter = document.getElementById('soundLetter');
+    const soundHearts = document.getElementById('soundHearts');
+    const soundSteps = document.getElementById('soundSteps');
+
+    let currentQuestion = -1;
+    const questionTexts = [
+      "Do you love my master? ❤️",
+      "Will you stay forever? 💍",
+      "Are you ready for the letter? 💌"
+    ];
+
+    const convinceReplies = [
+      "Oh come on, he's really cute! 🥺",
+      "Pleaaase? I know you do deep down! 💞",
+      "Just say yes, it's meant to be! 💘"
+    ];
+
+    cat.addEventListener('animationstart', () => {
+      soundSteps.play();
+    });
+
+    cat.addEventListener('animationend', () => {
+      clickNote.style.display = 'block';
+    });
+
+    cat.addEventListener('click', () => {
+      soundMeow.play();
+      clickNote.style.display = 'none';
+      cat.style.display = 'none';
+      catDialogue.style.display = 'block';
+      catText.innerText = 'Delivery here~ sent by my master Seb! 💌';
+      questions.innerHTML = `<button onclick="startDialogue(); soundClick.play();">Okay!</button>`;
+    });
+
+    function startDialogue() {
+      currentQuestion = 0;
+      askQuestion();
+    }
+
+    function askQuestion() {
+      catText.innerText = questionTexts[currentQuestion];
+      questions.innerHTML = `
+        <button onclick="handleAnswer(true); soundClick.play();">Yes</button>
+        <button onclick="handleAnswer(false); soundClick.play();">No</button>
+      `;
+    }
+
+    function handleAnswer(answer) {
+      if (answer) {
+        currentQuestion++;
+        if (currentQuestion < questionTexts.length) {
+          askQuestion();
+        } else {
+          questions.style.display = 'none';
+          catText.innerText = 'Here it comes! 😽';
+          catFace.innerText = '😼';
+          setTimeout(() => {
+            catDialogue.style.display = 'none';
+            envelopeContainer.style.display = 'block';
+            soundLetter.play();
+          }, 1000);
+        }
+      } else {
+        const convinceText = convinceReplies[Math.floor(Math.random() * convinceReplies.length)];
+        catText.innerText = convinceText;
+        questions.innerHTML = `<button onclick="handleAnswer(true); soundClick.play();">Okay fine... Yes</button>`;
+      }
+    }
+
+    function openEnvelope(el) {
+      el.classList.toggle('open');
+      soundHearts.play();
+      setTimeout(() => {
+        for (let i = 0; i < 20; i++) {
+          const heart = document.createElement('div');
+          heart.className = 'heart';
+          heart.style.left = 'calc(50% + ' + (Math.random() * 80 - 40) + 'px)';
+          heart.style.top = 'calc(50% + 40px)';
+          heart.style.animationDuration = 3 + Math.random() * 2 + 's';
+          document.body.appendChild(heart);
+        }
+      }, 500);
+    }
+  </script>
+</body>
+</html>
